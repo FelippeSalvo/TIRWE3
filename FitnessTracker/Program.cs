@@ -88,13 +88,16 @@ builder.Services.AddAuthorization();
 // Dependency Injection - Repositories
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IWorkoutRepository, WorkoutRepository>();
+builder.Services.AddScoped<IWorkoutLogRepository, WorkoutLogRepository>();
 builder.Services.AddScoped<ITreinoRepository, TreinoRepository>();
 
 // Dependency Injection - Services
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IWorkoutService, WorkoutService>();
+builder.Services.AddScoped<IWorkoutLogService, WorkoutLogService>();
 builder.Services.AddScoped<IMetabolismoService, MetabolismoService>();
 builder.Services.AddScoped<ITreinoService, TreinoService>();
+builder.Services.AddScoped<ITreinoAnalysisService, TreinoAnalysisService>();
 
 // Helpers
 builder.Services.AddScoped<JwtHelper>();

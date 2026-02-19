@@ -12,11 +12,13 @@ namespace FitnessTracker.Controllers;
 public class TreinoController : ControllerBase
 {
     private readonly ITreinoService _treinoService;
+    private readonly ITreinoAnalysisService _treinoAnalysisService;
     private readonly ILogger<TreinoController> _logger;
 
-    public TreinoController(ITreinoService treinoService, ILogger<TreinoController> logger)
+    public TreinoController(ITreinoService treinoService, ITreinoAnalysisService treinoAnalysisService, ILogger<TreinoController> logger)
     {
         _treinoService = treinoService;
+        _treinoAnalysisService = treinoAnalysisService;
         _logger = logger;
     }
 
@@ -99,5 +101,22 @@ public class TreinoController : ControllerBase
             return NotFound(new { message = "Treino não encontrado" });
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// Análise de qualidade do treino: score 0-100 e sugestões (volume, frequência por grupo, distribuição, séries).
+    /// </summary>
+    [HttpGet("analise/{idTreino}")]
+    public async Task<ActionResult<TreinoAnaliseDto>> GetAnalise(string idTreino)
+    {
+        var usuarioId = GetUsuarioId();
+        if (string.IsNullOrEmpty(usuarioId))
+            return Unauthorized();
+
+        var analise = await _treinoAnalysisService.AnalisarAsync(idTreino, usuarioId);
+        if (analise == null)
+            return NotFound(new { message = "Treino não encontrado" });
+
+        return Ok(analise);
     }
 }
