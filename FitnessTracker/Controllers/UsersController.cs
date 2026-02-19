@@ -1,3 +1,4 @@
+using FitnessTracker.DTOs;
 using FitnessTracker.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,17 +11,20 @@ namespace FitnessTracker.Controllers;
 [Authorize]
 public class UsersController : ControllerBase
 {
-    private readonly IUserService _userService;
+    private readonly IUsuarioService _usuarioService;
     private readonly ILogger<UsersController> _logger;
 
-    public UsersController(IUserService userService, ILogger<UsersController> logger)
+    public UsersController(IUsuarioService usuarioService, ILogger<UsersController> logger)
     {
-        _userService = userService;
+        _usuarioService = usuarioService;
         _logger = logger;
     }
 
+    /// <summary>
+    /// Obtém os dados do usuário autenticado.
+    /// </summary>
     [HttpGet("me")]
-    public async Task<ActionResult> GetCurrentUser()
+    public async Task<ActionResult<UsuarioDto>> GetCurrentUser()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -29,13 +33,13 @@ public class UsersController : ControllerBase
             return Unauthorized();
         }
 
-        var user = await _userService.GetByIdAsync(userId);
+        var usuario = await _usuarioService.GetByIdAsync(userId);
 
-        if (user == null)
+        if (usuario == null)
         {
             return NotFound();
         }
 
-        return Ok(user);
+        return Ok(usuario);
     }
 }

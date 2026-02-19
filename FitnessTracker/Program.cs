@@ -15,20 +15,20 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// Swagger Configuration
+// Swagger Configuration com suporte a JWT
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "FitnessTracker API",
         Version = "v1",
-        Description = "API para rastreamento de atividades físicas"
+        Description = "API para rastreamento de atividades físicas. Use o botão 'Authorize' para inserir o token JWT obtido no login."
     });
 
-    // JWT Authentication in Swagger
+    // JWT Authentication - permite testar endpoints protegidos no Swagger
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+        Description = "JWT Authorization header. Insira: Bearer {seu_token}. Token obtido em POST /api/auth/login",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.ApiKey,
@@ -86,13 +86,15 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 // Dependency Injection - Repositories
-builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IWorkoutRepository, WorkoutRepository>();
 
 // Dependency Injection - Services
-builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IWorkoutService, WorkoutService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
+
+// Helpers
+builder.Services.AddScoped<JwtHelper>();
 
 // CORS
 builder.Services.AddCors(options =>
@@ -114,6 +116,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "FitnessTracker API V1");
+        c.RoutePrefix = string.Empty; // Swagger na raiz
     });
 }
 

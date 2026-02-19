@@ -8,7 +8,7 @@ public class MappingProfile : Profile
 {
     public MappingProfile()
     {
-        CreateMap<User, UserDto>();
+        CreateMap<Usuario, UsuarioDto>();
         CreateMap<Workout, WorkoutDto>();
         CreateMap<CreateWorkoutDto, Workout>();
         CreateMap<UpdateWorkoutDto, Workout>();
