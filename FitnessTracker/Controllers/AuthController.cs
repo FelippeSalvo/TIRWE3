@@ -8,21 +8,24 @@ namespace FitnessTracker.Controllers;
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly IAuthService _authService;
+    private readonly IUsuarioService _usuarioService;
     private readonly ILogger<AuthController> _logger;
 
-    public AuthController(IAuthService authService, ILogger<AuthController> logger)
+    public AuthController(IUsuarioService usuarioService, ILogger<AuthController> logger)
     {
-        _authService = authService;
+        _usuarioService = usuarioService;
         _logger = logger;
     }
 
+    /// <summary>
+    /// Registra um novo usuário. Email deve ser único.
+    /// </summary>
     [HttpPost("register")]
     public async Task<ActionResult<AuthResponseDto>> Register([FromBody] RegisterDto registerDto)
     {
         try
         {
-            var result = await _authService.RegisterAsync(registerDto);
+            var result = await _usuarioService.RegisterAsync(registerDto);
             return Ok(result);
         }
         catch (InvalidOperationException ex)
@@ -31,14 +34,17 @@ public class AuthController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Realiza login e retorna token JWT.
+    /// </summary>
     [HttpPost("login")]
     public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginDto loginDto)
     {
-        var result = await _authService.LoginAsync(loginDto);
+        var result = await _usuarioService.LoginAsync(loginDto);
 
         if (result == null)
         {
-            return Unauthorized(new { message = "Invalid email or password" });
+            return Unauthorized(new { message = "Email ou senha inválidos" });
         }
 
         return Ok(result);
