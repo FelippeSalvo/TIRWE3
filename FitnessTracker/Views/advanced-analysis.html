@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Análise avançada - FitnessTracker</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>FitnessTracker</h1>
+    <nav>
+      <a href="index.html">Início</a>
+      <a href="treinos.html">Meus treinos</a>
+    </nav>
+  </header>
+  <div class="page">
+    <h1>Análise avançada do treino</h1>
+    <p class="error" id="msg"></p>
+    <div id="content"></div>
+  </div>
+  <script src="js/app.js"></script>
+  <script>
+    if (!checkAuth()) throw new Error();
+    const params = new URLSearchParams(location.search);
+    const id = params.get('id');
+    if (!id) { document.getElementById('msg').textContent = 'ID não informado.'; throw new Error(); }
+    (async () => {
+      try {
+        const a = await apiGet('/api/treino/advanced-analysis/' + id);
+        const score = a.score ?? 0;
+        const scoreClass = score >= 80 ? 'good' : score >= 40 ? '' : 'bad';
+        const c = document.getElementById('content');
+        c.innerHTML = `
+          <div class="card">
+            <p class="analysis-score ${scoreClass}">${score}/100</p>
+            <p style="font-size: 1.1rem; margin: 0 0 1rem 0;"><strong>${a.classificacao || ''}</strong></p>
+            <p><strong>Pontos fortes</strong></p>
+            <ul class="plain">${(a.pontosFortes || []).map(x => '<li>' + x + '</li>').join('') || '<li>Nenhum</li>'}</ul>
+            <p><strong>Pontos fracos</strong></p>
+            <ul class="plain">${(a.pontosFracos || []).map(x => '<li>' + x + '</li>').join('') || '<li>Nenhum</li>'}</ul>
+            <p><strong>Sugestões</strong></p>
+            <ul class="plain">${(a.sugestoes || []).map(x => '<li>' + x + '</li>').join('') || '<li>Nenhuma</li>'}</ul>
+          </div>
+        `;
+      } catch (err) {
+        document.getElementById('msg').textContent = err.message || 'Erro ao carregar análise';
+      }
+    })();
+  </script>
+</body>
+</html>

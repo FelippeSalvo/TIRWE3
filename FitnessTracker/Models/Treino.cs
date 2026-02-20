@@ -16,12 +16,15 @@ public class Treino
     [BsonElement("nome")]
     public string Nome { get; set; } = string.Empty;
 
-    [BsonElement("nivelRecomendado")]
-    public string NivelRecomendado { get; set; } = string.Empty; // Iniciante, Intermediário, Avançado
+    [BsonElement("grupoMuscularFoco")]
+    public string GrupoMuscularFoco { get; set; } = string.Empty;
 
     [BsonElement("listaExercicios")]
-    public List<Exercicio> ListaExercicios { get; set; } = new();
+    public List<TreinoExercicioItem> ListaExercicios { get; set; } = new();
 
     [BsonElement("dataCriacao")]
     public DateTime DataCriacao { get; set; } = DateTime.UtcNow;
+
+    [BsonElement("divisaoTreino")]
+    public string DivisaoTreino { get; set; } = "Personalizado"; // PushPullLegs, UpperLower, BroSplit, Personalizado
 }

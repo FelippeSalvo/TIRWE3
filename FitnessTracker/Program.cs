@@ -5,6 +5,8 @@ using FitnessTracker.Middleware;
 using FitnessTracker.Repositories;
 using FitnessTracker.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -12,7 +14,8 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options => options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase);
 builder.Services.AddEndpointsApiExplorer();
 
 // Swagger Configuration com suporte a JWT
@@ -90,6 +93,7 @@ builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IWorkoutRepository, WorkoutRepository>();
 builder.Services.AddScoped<IWorkoutLogRepository, WorkoutLogRepository>();
 builder.Services.AddScoped<ITreinoRepository, TreinoRepository>();
+builder.Services.AddScoped<IExerciseRepository, ExerciseRepository>();
 
 // Dependency Injection - Services
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
@@ -98,9 +102,14 @@ builder.Services.AddScoped<IWorkoutLogService, WorkoutLogService>();
 builder.Services.AddScoped<IMetabolismoService, MetabolismoService>();
 builder.Services.AddScoped<ITreinoService, TreinoService>();
 builder.Services.AddScoped<ITreinoAnalysisService, TreinoAnalysisService>();
+builder.Services.AddScoped<ISplitTemplateService, SplitTemplateService>();
+builder.Services.AddScoped<IAdvancedTrainingAnalysisService, AdvancedTrainingAnalysisService>();
 
 // Helpers
 builder.Services.AddScoped<JwtHelper>();
+
+// Seed de exercícios na inicialização (se collection vazia)
+builder.Services.AddHostedService<FitnessTracker.Data.ExerciseSeedHostedService>();
 
 // CORS
 builder.Services.AddCors(options =>
@@ -122,13 +131,22 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "FitnessTracker API V1");
-        c.RoutePrefix = string.Empty; // Swagger na raiz
+        c.RoutePrefix = "swagger";
     });
 }
 
 app.UseHttpsRedirection();
 
 app.UseCors("AllowAll");
+
+// Servir front-end estático da pasta Views (HTML/CSS/JS para testar a API)
+var viewsPath = Path.Combine(app.Environment.ContentRootPath, "Views");
+if (Directory.Exists(viewsPath))
+{
+    var provider = new PhysicalFileProvider(viewsPath);
+    app.UseDefaultFiles(new DefaultFilesOptions { FileProvider = provider, DefaultFileNames = new List<string> { "index.html" } });
+    app.UseStaticFiles(new StaticFileOptions { FileProvider = provider, RequestPath = "" });
+}
 
 // Global Exception Handler Middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();

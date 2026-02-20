@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Criar conta - FitnessTracker</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>FitnessTracker</h1>
+  </header>
+  <div class="page">
+    <div class="card login-card" style="max-width: 420px;">
+      <h1>Criar conta</h1>
+      <p class="error" id="msg"></p>
+      <form id="formRegister">
+        <label>Nome <input type="text" id="nome" required placeholder="Seu nome"></label>
+        <label>Email <input type="email" id="email" required placeholder="seu@email.com"></label>
+        <label>Senha (mín. 6) <input type="password" id="senha" required minlength="6" placeholder="••••••"></label>
+        <label>Peso (kg) <input type="number" id="peso" step="0.1" value="70" required></label>
+        <label>Altura (m) <input type="number" id="altura" step="0.01" value="1.75" required></label>
+        <label>Idade <input type="number" id="idade" value="30" required></label>
+        <label>Sexo
+          <select id="sexo">
+            <option value="M">M</option>
+            <option value="F">F</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </label>
+        <label>Meses de treino <input type="number" id="mesesDeTreino" value="0" min="0"></label>
+        <button type="submit">Registrar</button>
+      </form>
+      <p style="margin-top: 1rem;"><a href="index.html">Voltar ao login</a></p>
+    </div>
+  </div>
+  <script src="js/app.js"></script>
+  <script>
+    document.getElementById('formRegister').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById('msg');
+      msg.textContent = '';
+      try {
+        const res = await apiPost('/api/auth/register', {
+          nome: document.getElementById('nome').value.trim(),
+          email: document.getElementById('email').value.trim(),
+          senha: document.getElementById('senha').value,
+          peso: parseFloat(document.getElementById('peso').value),
+          altura: parseFloat(document.getElementById('altura').value),
+          idade: parseInt(document.getElementById('idade').value, 10),
+          sexo: document.getElementById('sexo').value,
+          mesesDeTreino: parseInt(document.getElementById('mesesDeTreino').value, 10)
+        });
+        if (res.token) setToken(res.token);
+        window.location.href = 'index.html';
+      } catch (err) {
+        msg.textContent = err.message || 'Erro ao registrar';
+      }
+    });
+  </script>
+</body>
+</html>

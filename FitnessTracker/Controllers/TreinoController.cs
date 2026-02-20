@@ -13,12 +13,14 @@ public class TreinoController : ControllerBase
 {
     private readonly ITreinoService _treinoService;
     private readonly ITreinoAnalysisService _treinoAnalysisService;
+    private readonly IAdvancedTrainingAnalysisService _advancedAnalysisService;
     private readonly ILogger<TreinoController> _logger;
 
-    public TreinoController(ITreinoService treinoService, ITreinoAnalysisService treinoAnalysisService, ILogger<TreinoController> logger)
+    public TreinoController(ITreinoService treinoService, ITreinoAnalysisService treinoAnalysisService, IAdvancedTrainingAnalysisService advancedAnalysisService, ILogger<TreinoController> logger)
     {
         _treinoService = treinoService;
         _treinoAnalysisService = treinoAnalysisService;
+        _advancedAnalysisService = advancedAnalysisService;
         _logger = logger;
     }
 
@@ -66,6 +68,8 @@ public class TreinoController : ControllerBase
             return Unauthorized();
 
         var treino = await _treinoService.CreateAsync(usuarioId, dto);
+        if (treino == null)
+            return BadRequest(new { message = "Um ou mais ExerciseIds não existem no catálogo. Use apenas IDs retornados por GET /api/exercises." });
         return CreatedAtAction(nameof(GetById), new { id = treino.Id }, treino);
     }
 
@@ -79,11 +83,12 @@ public class TreinoController : ControllerBase
         if (string.IsNullOrEmpty(usuarioId))
             return Unauthorized();
 
-        var treino = await _treinoService.UpdateAsync(id, usuarioId, dto);
-        if (treino == null)
+        var result = await _treinoService.UpdateAsync(id, usuarioId, dto);
+        if (result.Error == "NotFound")
             return NotFound(new { message = "Treino não encontrado" });
-
-        return Ok(treino);
+        if (result.Error == "InvalidExerciseIds")
+            return BadRequest(new { message = "Um ou mais ExerciseIds não existem no catálogo." });
+        return Ok(result.Treino);
     }
 
     /// <summary>
@@ -114,6 +119,23 @@ public class TreinoController : ControllerBase
             return Unauthorized();
 
         var analise = await _treinoAnalysisService.AnalisarAsync(idTreino, usuarioId);
+        if (analise == null)
+            return NotFound(new { message = "Treino não encontrado" });
+
+        return Ok(analise);
+    }
+
+    /// <summary>
+    /// Análise avançada: volume por músculo, redundância, fadiga, equilíbrio, adequação ao nível, frequência. Score 0-100, classificação, pontos fortes/fracos e sugestões.
+    /// </summary>
+    [HttpGet("advanced-analysis/{idTreino}")]
+    public async Task<ActionResult<AdvancedAnalysisDto>> GetAdvancedAnalysis(string idTreino)
+    {
+        var usuarioId = GetUsuarioId();
+        if (string.IsNullOrEmpty(usuarioId))
+            return Unauthorized();
+
+        var analise = await _advancedAnalysisService.AnalyzeAsync(idTreino, usuarioId);
         if (analise == null)
             return NotFound(new { message = "Treino não encontrado" });
 

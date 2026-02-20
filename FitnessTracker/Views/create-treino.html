@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Criar treino - FitnessTracker</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>FitnessTracker</h1>
+    <nav>
+      <a href="index.html">Início</a>
+      <a href="exercises.html">Exercícios</a>
+      <a href="treinos.html">Meus treinos</a>
+      <a href="create-treino.html">Criar treino</a>
+      <a href="splits.html">Templates</a>
+    </nav>
+  </header>
+  <div class="page">
+    <h1>Criar treino</h1>
+    <p class="error" id="msg"></p>
+    <div class="card" style="max-width: 520px;">
+      <form id="form">
+        <label>Nome do treino <input type="text" id="nome" required placeholder="ex: Push dia 1"></label>
+        <label>Grupo muscular foco <input type="text" id="grupoMuscularFoco" placeholder="ex: Peito" required></label>
+        <label>Divisão
+          <select id="divisaoTreino">
+            <option value="PushPullLegs">Push / Pull / Legs</option>
+            <option value="UpperLower">Superior / Inferior</option>
+            <option value="BroSplit">Bro Split (5 dias)</option>
+            <option value="Personalizado">Personalizado</option>
+          </select>
+        </label>
+        <label>Exercícios (marque e informe séries)</label>
+        <div class="check-list" id="exercises"></div>
+        <button type="submit">Criar treino</button>
+      </form>
+    </div>
+  </div>
+  <script src="js/app.js"></script>
+  <script>
+    if (!checkAuth()) throw new Error();
+    let exercises = [];
+    (async () => {
+      try {
+        exercises = await apiGet('/api/exercises');
+        const div = document.getElementById('exercises');
+        if (!exercises || exercises.length === 0) {
+          div.innerHTML = '<p>Nenhum exercício no catálogo.</p>';
+          return;
+        }
+        div.innerHTML = exercises.map(e => `
+          <label>
+            <input type="checkbox" name="ex" value="${e.id}" data-name="${(e.nome || '').replace(/"/g, '&quot;')}">
+            <input type="number" name="series" value="3" min="1" max="10" placeholder="séries">
+            ${e.nome || ''} <span style="color: var(--text-muted); font-size: 0.85rem;">(${e.grupoMuscularPrincipal || ''})</span>
+          </label>
+        `).join('');
+      } catch (err) {
+        document.getElementById('msg').textContent = err.message || 'Erro ao carregar exercícios';
+      }
+    })();
+    document.getElementById('form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById('msg');
+      msg.textContent = '';
+      const checked = document.querySelectorAll('input[name="ex"]:checked');
+      if (checked.length === 0) {
+        msg.textContent = 'Escolha ao menos um exercício.';
+        return;
+      }
+      const listaExercicios = Array.from(checked).map(cb => {
+        const row = cb.closest('label');
+        const seriesInput = row.querySelector('input[name="series"]');
+        return {
+          exerciseId: cb.value,
+          series: seriesInput ? Math.max(1, parseInt(seriesInput.value, 10) || 3) : 3
+        };
+      });
+      try {
+        await apiPost('/api/treino', {
+          nome: document.getElementById('nome').value.trim(),
+          grupoMuscularFoco: document.getElementById('grupoMuscularFoco').value.trim(),
+          divisaoTreino: document.getElementById('divisaoTreino').value,
+          listaExercicios
+        });
+        window.location.href = 'treinos.html';
+      } catch (err) {
+        msg.textContent = err.message || 'Erro ao criar treino';
+      }
+    });
+  </script>
+</body>
+</html>

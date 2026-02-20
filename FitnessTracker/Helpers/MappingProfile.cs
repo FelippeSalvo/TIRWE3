@@ -14,7 +14,8 @@ public class MappingProfile : Profile
         CreateMap<UpdateWorkoutDto, Workout>();
 
         CreateMap<Treino, TreinoDto>();
-        CreateMap<Exercicio, ExercicioDto>();
+        CreateMap<TreinoExercicioItem, TreinoExercicioItemDto>();
+        CreateMap<Exercise, ExerciseDto>();
 
         CreateMap<WorkoutLog, WorkoutLogDto>();
     }

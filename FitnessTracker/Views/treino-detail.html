@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Treino - FitnessTracker</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>FitnessTracker</h1>
+    <nav>
+      <a href="index.html">Início</a>
+      <a href="treinos.html">Meus treinos</a>
+    </nav>
+  </header>
+  <div class="page">
+    <h1>Treino</h1>
+    <p class="error" id="msg"></p>
+    <div id="content"></div>
+    <p style="margin-top: 1rem;"><a href="#" id="linkAnalysis" class="btn">Ver análise avançada</a></p>
+  </div>
+  <script src="js/app.js"></script>
+  <script>
+    if (!checkAuth()) throw new Error();
+    const params = new URLSearchParams(location.search);
+    const id = params.get('id');
+    if (!id) { document.getElementById('msg').textContent = 'ID não informado.'; throw new Error(); }
+    document.getElementById('linkAnalysis').href = 'advanced-analysis.html?id=' + id;
+    (async () => {
+      try {
+        const t = await apiGet('/api/treino/' + id);
+        document.getElementById('content').innerHTML = `
+          <div class="card">
+            <p style="font-size: 1.25rem; margin: 0;"><strong>${t.nome || ''}</strong></p>
+            <p style="margin: 0.5rem 0; color: var(--text-muted);">Grupo foco: ${t.grupoMuscularFoco || ''} · Divisão: ${t.divisaoTreino || ''}</p>
+            <p style="margin: 0.5rem 0 0 0;"><strong>Exercícios:</strong> ${(t.listaExercicios || []).map(e => e.exerciseId + ' (' + (e.series || 3) + ' séries)').join(', ') || 'Nenhum'}</p>
+          </div>
+        `;
+      } catch (err) {
+        document.getElementById('msg').textContent = err.message || 'Erro ao carregar';
+      }
+    })();
+  </script>
+</body>
+</html>
